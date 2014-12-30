@@ -106,9 +106,17 @@ Result archive_getfilesize(int archive, char *path, u32 *outsize)
 	u64 tmp64=0;
 	Handle filehandle=0;
 
+	char filepath[256];
+
 	if(archive==-1)
 	{
-		if(stat(path, &filestats)==-1)return -1;
+		memset(filepath, 0, 256);
+		snprintf(filepath, 255, "sdmc:%s", path);
+
+		if(stat(filepath, &filestats)==-1)
+		{
+			return -1;
+		}
 
 		*outsize = filestats.st_size;
 
@@ -140,7 +148,7 @@ Result archive_readfile(int archive, char *path, u8 *buffer, u32 size)
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "sdmc:%s", path);
 
-		f = fopen(filepath, "rb");
+		f = fopen(filepath, "r");
 		if(f==NULL)return -1;
 
 		tmpval = fread(buffer, 1, size, f);
@@ -152,7 +160,7 @@ Result archive_readfile(int archive, char *path, u8 *buffer, u32 size)
 		return 0;
 	}
 
-	ret = FSUSER_OpenFile(NULL, &filehandle, extdata_archives[archive], FS_makePath(PATH_CHAR, path), 1, 0);
+	ret = FSUSER_OpenFile(NULL, &filehandle, extdata_archives[archive], FS_makePath(PATH_CHAR, path), FS_OPEN_READ, 0);
 	if(ret!=0)return ret;
 
 	ret = FSFILE_Read(filehandle, &tmpval, 0, buffer, size);
@@ -178,7 +186,7 @@ Result archive_writefile(int archive, char *path, u8 *buffer, u32 size)
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "sdmc:%s", path);
 
-		f = fopen(filepath, "wb");
+		f = fopen(filepath, "r+");
 		if(f==NULL)return -1;
 
 		tmpval = fwrite(buffer, 1, size, f);
@@ -190,7 +198,7 @@ Result archive_writefile(int archive, char *path, u8 *buffer, u32 size)
 		return 0;
 	}
 
-	ret = FSUSER_OpenFile(NULL, &filehandle, extdata_archives[archive], FS_makePath(PATH_CHAR, path), 1, 0);
+	ret = FSUSER_OpenFile(NULL, &filehandle, extdata_archives[archive], FS_makePath(PATH_CHAR, path), FS_OPEN_WRITE, 0);
 	if(ret!=0)return ret;
 
 	ret = FSFILE_Write(filehandle, &tmpval, 0, buffer, size, FS_WRITE_FLUSH);
@@ -198,6 +206,60 @@ Result archive_writefile(int archive, char *path, u8 *buffer, u32 size)
 	FSFILE_Close(filehandle);
 
 	if(ret==0 && tmpval!=size)ret=-2;
+
+	return ret;
+}
+
+Result archive_copyfile(int inarchive, int outarchive, char *inpath, char *outpath, u8* buffer, u32 size, u32 maxbufsize, char *display_filepath)
+{
+	Result ret=0;
+	u32 filesize=0;
+
+	ret = archive_getfilesize(inarchive, inpath, &filesize);
+	printf("archive_getfilesize() ret=0x%08x, size=0x%08x\n", (unsigned int)ret, (unsigned int)filesize);
+	gfxFlushBuffers();
+	gfxSwapBuffers();
+	if(ret!=0)return ret;
+
+	if(size==0 || size>filesize)
+	{
+		size = filesize;
+	}
+
+	if(size>maxbufsize)
+	{
+		printf("Size is too large.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		ret = -1;
+		return ret;
+	}
+
+	printf("Reading %s...\n", display_filepath);
+	gfxFlushBuffers();
+	gfxSwapBuffers();
+
+	ret = archive_readfile(inarchive, inpath, buffer, size);
+	if(ret!=0)
+	{
+		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		return ret;
+	}
+
+	printf("Writing %s...\n", display_filepath);
+	gfxFlushBuffers();
+	gfxSwapBuffers();
+
+	ret = archive_writefile(outarchive, outpath, buffer, size);
+	if(ret!=0)
+	{
+		printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		return ret;
+	}
 
 	return ret;
 }
