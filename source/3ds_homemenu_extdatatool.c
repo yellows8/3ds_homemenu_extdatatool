@@ -90,7 +90,7 @@ int menu_savedatadat2sd()
 	memset(filepath, 0, 256);
 	snprintf(filepath, 255, "%sSaveData.dat", sdpath_prefix);
 
-	ret = archive_copyfile(HomeMenu_Extdata, -1, "/SaveData.dat", filepath, filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
+	ret = archive_copyfile(HomeMenu_Extdata, SDArchive, "/SaveData.dat", filepath, filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
 
 	if(ret==0)printf("Successfully finished.\n");
 
@@ -110,7 +110,7 @@ int menu_sd2savedatadat()
 	memset(filepath, 0, 256);
 	snprintf(filepath, 255, "%sSaveData.dat", sdpath_prefix);
 
-	ret = archive_copyfile(-1, HomeMenu_Extdata, filepath, "/SaveData.dat", filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
+	ret = archive_copyfile(SDArchive, HomeMenu_Extdata, filepath, "/SaveData.dat", filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
 
 	if(ret==0)printf("Successfully finished.\n");
 

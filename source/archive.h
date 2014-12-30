@@ -1,7 +1,8 @@
 typedef enum {
 	HomeMenu_Extdata,
 	Theme_Extdata,
-	TotalExtdataArchives
+	TotalExtdataArchives,
+	SDArchive = TotalExtdataArchives
 } ExtdataArchive;
 
 Result open_extdata();

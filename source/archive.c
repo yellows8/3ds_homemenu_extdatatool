@@ -108,7 +108,7 @@ Result archive_getfilesize(int archive, char *path, u32 *outsize)
 
 	char filepath[256];
 
-	if(archive==-1)
+	if(archive==SDArchive)
 	{
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "sdmc:%s", path);
@@ -143,7 +143,7 @@ Result archive_readfile(int archive, char *path, u8 *buffer, u32 size)
 
 	char filepath[256];
 
-	if(archive==-1)
+	if(archive==SDArchive)
 	{
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "sdmc:%s", path);
@@ -181,7 +181,7 @@ Result archive_writefile(int archive, char *path, u8 *buffer, u32 size)
 
 	char filepath[256];
 
-	if(archive==-1)
+	if(archive==SDArchive)
 	{
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "sdmc:%s", path);
