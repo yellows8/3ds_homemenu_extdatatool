@@ -1,17 +1,10 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <3ds.h>
 
-typedef enum {
-	HomeMenu_Extdata,
-	Theme_Extdata,
-	TotalExtdataArchives
-} ExtdataArchive;
-
-u32 extdata_archives_lowpathdata[TotalExtdataArchives][3];
-FS_archive extdata_archives[TotalExtdataArchives];
-u32 extdata_initialized = 0;
+#include "archive.h"
 
 typedef int (*menuent_funcptr)(void);
 
@@ -30,86 +23,10 @@ char *mainmenu_entries[5] = {
 "Copy theme cache from sd to extdata"};
 menuent_funcptr mainmenu_entryhandlers[5] = {menu_savedatadat2sd, menu_sd2savedatadat, menu_enablethemecache, menu_themecache2sd, menu_sd2themecache};
 
-char *sdpath_prefix = "/3ds_homemenu_extdatatool/";
+char *sdpath_prefix = "/3ds/3ds_homemenu_extdatatool/";
 
-Result open_extdata()
-{
-	Result ret=0;
-	u32 pos;
-	u32 extdataID_homemenu, extdataID_theme;
-
-	extdataID_homemenu = 0x0000008f;//Hard-coded for USA for now.
-	extdataID_theme = 0x000002cd;
-
-	for(pos=0; pos<TotalExtdataArchives; pos++)
-	{
-		extdata_archives[pos].id = ARCH_EXTDATA;
-		extdata_archives[pos].lowPath.type = PATH_BINARY;
-		extdata_archives[pos].lowPath.size = 0xc;
-		extdata_archives[pos].lowPath.data = (u8*)extdata_archives_lowpathdata[pos];
-
-		memset(extdata_archives_lowpathdata[pos], 0, 0xc);
-		extdata_archives_lowpathdata[pos][0] = 1;//mediatype, 1=SD
-	}
-
-	extdata_archives_lowpathdata[HomeMenu_Extdata][1] = extdataID_homemenu;//extdataID-low
-	extdata_archives_lowpathdata[Theme_Extdata][1] = extdataID_theme;//extdataID-low
-
-	ret = FSUSER_OpenArchive(NULL, &extdata_archives[HomeMenu_Extdata]);
-	if(ret!=0)
-	{
-		printf("Failed to open homemenu extdata with extdataID=0x%08x, retval: 0x%08x\n", (unsigned int)extdataID_homemenu, (unsigned int)ret);
-		return ret;
-	}
-	extdata_initialized |= 0x1;
-
-	ret = FSUSER_OpenArchive(NULL, &extdata_archives[Theme_Extdata]);
-	if(ret!=0)
-	{
-		printf("Failed to open theme extdata with extdataID=0x%08x, retval: 0x%08x\n", (unsigned int)extdataID_theme, (unsigned int)ret);
-		return ret;
-	}
-	extdata_initialized |= 0x2;
-
-	return 0;
-}
-
-void close_extdata()
-{
-	u32 pos;
-
-	for(pos=0; pos<TotalExtdataArchives; pos++)
-	{
-		if(extdata_initialized & (1<<pos))FSUSER_CloseArchive(NULL, &extdata_archives[pos]);
-	}
-}
-
-Result archive_getfilesize(int archive, char *path, u32 *outsize)
-{
-	Result ret=0;
-	struct stat filestats;
-	u64 tmp64=0;
-	Handle filehandle=0;
-
-	if(archive==-1)
-	{
-		if(stat(path, &filestats)==-1)return -1;
-
-		*outsize = filestats.st_size;
-
-		return 0;
-	}
-
-	ret = FSUSER_OpenFile(NULL, &filehandle, extdata_archives[archive], FS_makePath(PATH_CHAR, path), 1, 0);
-	if(ret!=0)return ret;
-
-	ret = FSFILE_GetSize(filehandle, &tmp64);
-	if(ret==0)*outsize = (u32)tmp64;
-
-	FSFILE_Close(filehandle);
-
-	return ret;
-}
+u8 *filebuffer;
+u32 filebuffer_maxsize = 0x400000;
 
 int draw_menu(char **menu_entries, int total_menuentries, int x, int y)
 {
@@ -167,14 +84,63 @@ int menu_savedatadat2sd()
 {
 	Result ret=0;
 	u32 size=0;
+	char filepath[256];
+
+	memset(filebuffer, 0, filebuffer_maxsize);
+
+	memset(filepath, 0, 256);
+	snprintf(filepath, 255, "%sSaveData.dat", sdpath_prefix);
 
 	ret = archive_getfilesize(HomeMenu_Extdata, "/SaveData.dat", &size);
-	printf("ret=0x%08x size=0x%08x\n", (unsigned int)ret, (unsigned int)size);
+	printf("archive_getfilesize() ret=0x%08x, size=0x%08x\n", (unsigned int)ret, (unsigned int)size);
+
+	if(ret==0 && size>filebuffer_maxsize)
+	{
+		printf("Filesize is too large.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		ret = -1;
+	}
+
+	if(ret==0)
+	{
+		printf("Reading SaveData.dat...\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
+
+	if(ret==0)
+	{
+		ret = archive_readfile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, size);
+		if(ret!=0)
+		{
+			printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+	}
+
+	if(ret==0)
+	{
+		printf("Writing SaveData.dat...\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+
+		ret = archive_writefile(-1, filepath, filebuffer, size);
+		if(ret!=0)
+		{
+			printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+	}
+
+	if(ret==0)printf("Successfully finished.\n");
 
 	gfxFlushBuffers();
 	gfxSwapBuffers();
-	svcSleepThread(2000000000LL);
-	return -1;
+	svcSleepThread(5000000000LL);
+	return 0;
 }
 
 int menu_sd2savedatadat()
@@ -183,7 +149,7 @@ int menu_sd2savedatadat()
 	gfxFlushBuffers();
 	gfxSwapBuffers();
 	svcSleepThread(2000000000LL);
-	return -1;
+	return 0;
 }
 
 int menu_enablethemecache()
@@ -192,7 +158,7 @@ int menu_enablethemecache()
 	gfxFlushBuffers();
 	gfxSwapBuffers();
 	svcSleepThread(2000000000LL);
-	return -1;
+	return 0;
 }
 
 int menu_themecache2sd()
@@ -201,7 +167,7 @@ int menu_themecache2sd()
 	gfxFlushBuffers();
 	gfxSwapBuffers();
 	svcSleepThread(2000000000LL);
-	return -1;
+	return 0;
 }
 
 int menu_sd2themecache()
@@ -210,12 +176,15 @@ int menu_sd2themecache()
 	gfxFlushBuffers();
 	gfxSwapBuffers();
 	svcSleepThread(2000000000LL);
-	return -1;
+	return 0;
 }
 
 int handle_menus()
 {
 	int ret;
+
+	gfxFlushBuffers();
+	gfxSwapBuffers();
 
 	while(aptMainLoop())
 	{
@@ -235,7 +204,7 @@ int handle_menus()
 
 int main()
 {
-	Result extdata_openretval = 0;
+	Result ret = 0;
 
 	// Initialize services
 	gfxInit();
@@ -243,18 +212,40 @@ int main()
 	consoleInit(GFX_BOTTOM, NULL);
 
 	printf("3ds_homemenu_extdatatool\n");
+	gfxFlushBuffers();
+	gfxSwapBuffers();
 
-	printf("Opening extdata archives...\n");
-	extdata_openretval = open_extdata();
-	if(extdata_openretval==0)
+	filebuffer = (u8*)malloc(0x400000);
+	if(filebuffer==NULL)
 	{
-		printf("Finished opening extdata.\n");
-
-		consoleClear();
-		handle_menus();
+		printf("Failed to allocate memory.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		ret = -1;
+	}
+	else
+	{
+		memset(filebuffer, 0, filebuffer_maxsize);
 	}
 
-	if(extdata_openretval<0)
+	if(ret>=0)
+	{
+		printf("Opening extdata archives...\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		ret = open_extdata();
+		if(ret==0)
+		{
+			printf("Finished opening extdata.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+
+			consoleClear();
+			handle_menus();
+		}
+	}
+
+	if(ret<0)
 	{
 		printf("Press the START button to exit.\n");
 		// Main loop
@@ -273,6 +264,7 @@ int main()
 		}
 	}
 
+	free(filebuffer);
 	close_extdata();
 
 	// Exit services
