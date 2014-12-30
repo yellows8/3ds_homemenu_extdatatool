@@ -23,7 +23,7 @@ char *mainmenu_entries[5] = {
 "Copy theme cache from sd to extdata"};
 menuent_funcptr mainmenu_entryhandlers[5] = {menu_savedatadat2sd, menu_sd2savedatadat, menu_enablethemecache, menu_themecache2sd, menu_sd2themecache};
 
-char *sdpath_prefix = "/3ds/3ds_homemenu_extdatatool/";
+char sdpath_prefix[] = "/3ds/3ds_homemenu_extdatatool/";
 
 u8 *filebuffer;
 u32 filebuffer_maxsize = 0x400000;
@@ -143,7 +143,7 @@ int menu_enablethemecache()
 
 	if(ret==0)
 	{
-		if(filebuffer[0x131b]==0  && filebuffer[0x13bc]==0 && filebuffer[0x13bd]==2)
+		if(filebuffer[0x131b]==0 && filebuffer[0x13b8]!=0 && filebuffer[0x13bc]==0 && filebuffer[0x13bd]==2)
 		{
 			ret = -3;
 			printf("SaveData.dat is already set for using the theme cache.\n");
@@ -158,6 +158,7 @@ int menu_enablethemecache()
 		filebuffer[0x131b]=0;
 		filebuffer[0x13bd]=2;
 		memset(&filebuffer[0x13b8], 0, 5);
+		filebuffer[0x13b8] = 0xff;
 
 		printf("Writing updated SaveData.dat...\n");
 		gfxFlushBuffers();
@@ -212,7 +213,7 @@ int menu_themecache2sd()
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "%sBodyCache.bin", sdpath_prefix);
 
-		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BodyCache.bin", filepath, filebuffer, thememanage[0x8>>2], filebuffer_maxsize, "BodyCache.bin");
+		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BodyCache.bin", filepath, filebuffer, thememanage[0x8>>2], 0x150000, "BodyCache.bin");
 
 		if(ret==0)
 		{
@@ -237,7 +238,7 @@ int menu_themecache2sd()
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "%sBgmCache.bin", sdpath_prefix);
 
-		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BgmCache.bin", filepath, filebuffer, thememanage[0xC>>2], filebuffer_maxsize, "BgmCache.bin");
+		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BgmCache.bin", filepath, filebuffer, thememanage[0xC>>2], 0x337000, "BgmCache.bin");
 
 		if(ret==0)
 		{
@@ -252,9 +253,166 @@ int menu_themecache2sd()
 
 int menu_sd2themecache()
 {
-	printf("sd2themecache N/A\n");
-	gfxFlushBuffers();
-	gfxSwapBuffers();
+	Result ret=0;
+	u32 body_size=0, bgm_size=0;
+	u32 thememanage[0x20>>2];
+	char filepath[256];
+	char body_filepath[256];
+	char bgm_filepath[256];
+
+	memset(thememanage, 0, 0x20);
+
+	memset(body_filepath, 0, 256);
+	snprintf(body_filepath, 255, "%sBodyCache.bin", sdpath_prefix);
+
+	ret = archive_getfilesize(SDArchive, body_filepath, &body_size);
+	if(ret!=0)
+	{
+		memset(body_filepath, 0, 256);
+		snprintf(body_filepath, 255, "%sbody_LZ.bin", sdpath_prefix);
+
+		ret = archive_getfilesize(SDArchive, body_filepath, &body_size);
+		if(ret!=0)
+		{
+			printf("Failed to stat BodyCache.bin and body_LZ.bin on SD, copying for the body-data will be skipped.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+
+			memset(body_filepath, 0, 256);
+		}
+		else
+		{
+			printf("Using body-filepath body_LZ.bin.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+	}
+	else
+	{
+		printf("Using body-filepath BodyCache.bin.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
+
+	memset(bgm_filepath, 0, 256);
+	snprintf(bgm_filepath, 255, "%sBgmCache.bin", sdpath_prefix);
+
+	ret = archive_getfilesize(SDArchive, bgm_filepath, &bgm_size);
+	if(ret!=0)
+	{
+		memset(bgm_filepath, 0, 256);
+		snprintf(bgm_filepath, 255, "%sbgm.bcstm", sdpath_prefix);
+
+		ret = archive_getfilesize(SDArchive, bgm_filepath, &bgm_size);
+		if(ret!=0)
+		{
+			printf("Failed to stat BgmCache.bin and bgm.bcstm on SD, copying for the bgm-data will be skipped.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+
+			memset(bgm_filepath, 0, 256);
+		}
+		else
+		{
+			printf("Using bgm-filepath bgm.bcstm.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+	}
+	else
+	{
+		printf("Using bgm-filepath BgmCache.bin.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
+
+	memset(filepath, 0, 256);
+	snprintf(filepath, 255, "%sThemeManage.bin", sdpath_prefix);
+
+	ret = archive_copyfile(SDArchive, Theme_Extdata, filepath, "/ThemeManage.bin", filebuffer, 0x800, filebuffer_maxsize, "ThemeManage.bin");
+
+	if(ret==0)
+	{
+		printf("Successfully finished copying ThemeManage.bin.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+
+		memcpy(thememanage, filebuffer, 0x20);
+	}
+	else
+	{
+		printf("Failed to copy ThemeManage.bin, generating one then trying again...\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+
+		memset(thememanage, 0, 0x20);
+		thememanage[0x0>>2] = 1;
+		thememanage[0x8>>2] = body_size;
+		thememanage[0xC>>2] = bgm_size;
+		thememanage[0x10>>2] = 0xff;
+		thememanage[0x14>>2] = 1;
+		thememanage[0x18>>2] = 0xff;
+		thememanage[0x1c>>2] = 0x200;
+
+		memset(filebuffer, 0, 0x800);
+		memcpy(filebuffer, thememanage, 0x20);
+		ret = archive_writefile(Theme_Extdata, "/ThemeManage.bin", filebuffer, 0x800);
+
+		if(ret!=0)
+		{
+			printf("Failed to write ThemeManage.bin to extdata, aborting.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+			return 0;
+		}
+	}
+
+	if(body_filepath[0])
+	{
+		if(thememanage[0x8>>2] == 0)
+		{
+			printf("Skipping copying of body-data since the size field is zero.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+		else
+		{
+			ret = archive_copyfile(SDArchive, Theme_Extdata, body_filepath, "/BodyCache.bin", filebuffer, thememanage[0x8>>2], 0x150000, "body-data");
+
+			if(ret==0)
+			{
+				printf("Successfully finished copying body-data.\n");
+				gfxFlushBuffers();
+				gfxSwapBuffers();
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+
+	if(bgm_filepath[0])
+	{
+		if(thememanage[0xC>>2] == 0)
+		{
+			printf("Skipping copying of bgm-data since the size field is zero.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+		else
+		{
+			ret = archive_copyfile(SDArchive, Theme_Extdata, bgm_filepath, "/BgmCache.bin", filebuffer, thememanage[0xC>>2], 0x337000, "bgm-data");
+
+			if(ret==0)
+			{
+				printf("Successfully finished copying bgm-data.\n");
+				gfxFlushBuffers();
+				gfxSwapBuffers();
+			}
+		}
+	}
+
 	return 0;
 }
 

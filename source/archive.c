@@ -114,10 +114,7 @@ Result archive_getfilesize(Archive archive, char *path, u32 *outsize)
 		memset(filepath, 0, 256);
 		snprintf(filepath, 255, "sdmc:%s", path);
 
-		if(stat(filepath, &filestats)==-1)
-		{
-			return -1;
-		}
+		if(stat(filepath, &filestats)==-1)return errno;
 
 		*outsize = filestats.st_size;
 
@@ -150,7 +147,7 @@ Result archive_readfile(Archive archive, char *path, u8 *buffer, u32 size)
 		snprintf(filepath, 255, "sdmc:%s", path);
 
 		f = fopen(filepath, "r");
-		if(f==NULL)return -1;
+		if(f==NULL)return errno;
 
 		tmpval = fread(buffer, 1, size, f);
 
@@ -188,7 +185,7 @@ Result archive_writefile(Archive archive, char *path, u8 *buffer, u32 size)
 		snprintf(filepath, 255, "sdmc:%s", path);
 
 		f = fopen(filepath, "w+");
-		if(f==NULL)return -1;
+		if(f==NULL)return errno;
 
 		tmpval = fwrite(buffer, 1, size, f);
 
@@ -218,11 +215,6 @@ Result archive_copyfile(Archive inarchive, Archive outarchive, char *inpath, cha
 
 	ret = archive_getfilesize(inarchive, inpath, &filesize);
 	printf("archive_getfilesize() ret=0x%08x, size=0x%08x\n", (unsigned int)ret, (unsigned int)filesize);
-	if(ret==-1)
-	{
-		ret = errno;
-		printf("errno=0x%08x\n", (unsigned int)ret);
-	}
 	gfxFlushBuffers();
 	gfxSwapBuffers();
 	if(ret!=0)return ret;
@@ -249,11 +241,6 @@ Result archive_copyfile(Archive inarchive, Archive outarchive, char *inpath, cha
 	if(ret!=0)
 	{
 		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
-		if(ret==-1)
-		{
-			ret = errno;
-			printf("errno=0x%08x\n", (unsigned int)ret);
-		}
 		gfxFlushBuffers();
 		gfxSwapBuffers();
 		return ret;
@@ -267,11 +254,6 @@ Result archive_copyfile(Archive inarchive, Archive outarchive, char *inpath, cha
 	if(ret!=0)
 	{
 		printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
-		if(ret==-1)
-		{
-			ret = errno;
-			printf("errno=0x%08x\n", (unsigned int)ret);
-		}
 		gfxFlushBuffers();
 		gfxSwapBuffers();
 		return ret;
