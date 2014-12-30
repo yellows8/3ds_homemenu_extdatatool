@@ -122,10 +122,53 @@ int menu_sd2savedatadat()
 
 int menu_enablethemecache()
 {	
-	printf("enablethemecache N/A\n");
+	Result ret=0;
+
+	printf("Reading SaveData.dat...\n");
 	gfxFlushBuffers();
 	gfxSwapBuffers();
-	svcSleepThread(2000000000LL);
+
+	ret = archive_readfile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2cb0);
+	if(ret!=0)
+	{
+		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
+
+	if(ret==0)
+	{
+		if(filebuffer[0x131b]==0  && filebuffer[0x13bc]==0 && filebuffer[0x13bd]==2)
+		{
+			ret = -3;
+			printf("SaveData.dat is already set for using the theme cache.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+	}
+
+	if(ret==0)
+	{
+		filebuffer[0x131b]=0;
+		filebuffer[0x13bd]=2;
+		memset(&filebuffer[0x13b8], 0, 5);
+
+		printf("Writing updated SaveData.dat...\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+
+		ret = archive_writefile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2cb0);
+		if(ret!=0)
+		{
+			printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+	}
+
+	gfxFlushBuffers();
+	gfxSwapBuffers();
+	svcSleepThread(5000000000LL);
 	return 0;
 }
 
