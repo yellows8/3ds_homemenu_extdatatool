@@ -23,8 +23,6 @@ char *mainmenu_entries[5] = {
 "Copy theme cache from sd to extdata"};
 menuent_funcptr mainmenu_entryhandlers[5] = {menu_savedatadat2sd, menu_sd2savedatadat, menu_enablethemecache, menu_themecache2sd, menu_sd2themecache};
 
-char sdpath_prefix[] = "/3ds/3ds_homemenu_extdatatool/";
-
 u8 *filebuffer;
 u32 filebuffer_maxsize = 0x400000;
 
@@ -88,7 +86,7 @@ int menu_savedatadat2sd()
 	memset(filebuffer, 0, filebuffer_maxsize);
 
 	memset(filepath, 0, 256);
-	snprintf(filepath, 255, "%sSaveData.dat", sdpath_prefix);
+	strncpy(filepath, "SaveData.dat", 255);
 
 	ret = archive_copyfile(HomeMenu_Extdata, SDArchive, "/SaveData.dat", filepath, filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
 
@@ -110,7 +108,7 @@ int menu_sd2savedatadat()
 	memset(filebuffer, 0, filebuffer_maxsize);
 
 	memset(filepath, 0, 256);
-	snprintf(filepath, 255, "%sSaveData.dat", sdpath_prefix);
+	strncpy(filepath, "SaveData.dat", 255);
 
 	ret = archive_copyfile(SDArchive, HomeMenu_Extdata, filepath, "/SaveData.dat", filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
 
@@ -185,7 +183,7 @@ int menu_themecache2sd()
 	memset(thememanage, 0, 0x20);
 
 	memset(filepath, 0, 256);
-	snprintf(filepath, 255, "%sThemeManage.bin", sdpath_prefix);
+	strncpy(filepath, "ThemeManage.bin", 255);
 
 	ret = archive_copyfile(Theme_Extdata, SDArchive, "/ThemeManage.bin", filepath, filebuffer, 0x800, filebuffer_maxsize, "ThemeManage.bin");
 
@@ -211,7 +209,7 @@ int menu_themecache2sd()
 	else
 	{
 		memset(filepath, 0, 256);
-		snprintf(filepath, 255, "%sBodyCache.bin", sdpath_prefix);
+		strncpy(filepath, "BodyCache.bin", 255);
 
 		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BodyCache.bin", filepath, filebuffer, thememanage[0x8>>2], 0x150000, "BodyCache.bin");
 
@@ -236,7 +234,7 @@ int menu_themecache2sd()
 	else
 	{
 		memset(filepath, 0, 256);
-		snprintf(filepath, 255, "%sBgmCache.bin", sdpath_prefix);
+		strncpy(filepath, "BgmCache.bin", 255);
 
 		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BgmCache.bin", filepath, filebuffer, thememanage[0xC>>2], 0x337000, "BgmCache.bin");
 
@@ -263,13 +261,13 @@ int menu_sd2themecache()
 	memset(thememanage, 0, 0x20);
 
 	memset(body_filepath, 0, 256);
-	snprintf(body_filepath, 255, "%sBodyCache.bin", sdpath_prefix);
+	strncpy(body_filepath, "BodyCache.bin", 255);
 
 	ret = archive_getfilesize(SDArchive, body_filepath, &body_size);
 	if(ret!=0)
 	{
 		memset(body_filepath, 0, 256);
-		snprintf(body_filepath, 255, "%sbody_LZ.bin", sdpath_prefix);
+		strncpy(body_filepath, "body_LZ.bin", 255);
 
 		ret = archive_getfilesize(SDArchive, body_filepath, &body_size);
 		if(ret!=0)
@@ -295,13 +293,13 @@ int menu_sd2themecache()
 	}
 
 	memset(bgm_filepath, 0, 256);
-	snprintf(bgm_filepath, 255, "%sBgmCache.bin", sdpath_prefix);
+	strncpy(bgm_filepath, "BgmCache.bin", 255);
 
 	ret = archive_getfilesize(SDArchive, bgm_filepath, &bgm_size);
 	if(ret!=0)
 	{
 		memset(bgm_filepath, 0, 256);
-		snprintf(bgm_filepath, 255, "%sbgm.bcstm", sdpath_prefix);
+		strncpy(bgm_filepath, "bgm.bcstm", 255);
 
 		ret = archive_getfilesize(SDArchive, bgm_filepath, &bgm_size);
 		if(ret!=0)
@@ -327,7 +325,7 @@ int menu_sd2themecache()
 	}
 
 	memset(filepath, 0, 256);
-	snprintf(filepath, 255, "%sThemeManage.bin", sdpath_prefix);
+	strncpy(filepath, "ThemeManage.bin", 255);
 
 	ret = archive_copyfile(SDArchive, Theme_Extdata, filepath, "/ThemeManage.bin", filebuffer, 0x800, filebuffer_maxsize, "ThemeManage.bin");
 

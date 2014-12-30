@@ -112,7 +112,7 @@ Result archive_getfilesize(Archive archive, char *path, u32 *outsize)
 	if(archive==SDArchive)
 	{
 		memset(filepath, 0, 256);
-		snprintf(filepath, 255, "sdmc:%s", path);
+		strncpy(filepath, path, 255);
 
 		if(stat(filepath, &filestats)==-1)return errno;
 
@@ -144,7 +144,7 @@ Result archive_readfile(Archive archive, char *path, u8 *buffer, u32 size)
 	if(archive==SDArchive)
 	{
 		memset(filepath, 0, 256);
-		snprintf(filepath, 255, "sdmc:%s", path);
+		strncpy(filepath, path, 255);
 
 		f = fopen(filepath, "r");
 		if(f==NULL)return errno;
@@ -182,7 +182,7 @@ Result archive_writefile(Archive archive, char *path, u8 *buffer, u32 size)
 	if(archive==SDArchive)
 	{
 		memset(filepath, 0, 256);
-		snprintf(filepath, 255, "sdmc:%s", path);
+		strncpy(filepath, path, 255);
 
 		f = fopen(filepath, "w+");
 		if(f==NULL)return errno;
