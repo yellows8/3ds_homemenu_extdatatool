@@ -92,11 +92,13 @@ int menu_savedatadat2sd()
 
 	ret = archive_copyfile(HomeMenu_Extdata, SDArchive, "/SaveData.dat", filepath, filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
 
-	if(ret==0)printf("Successfully finished.\n");
+	if(ret==0)
+	{
+		printf("Successfully finished.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
 
-	gfxFlushBuffers();
-	gfxSwapBuffers();
-	svcSleepThread(5000000000LL);
 	return 0;
 }
 
@@ -112,11 +114,13 @@ int menu_sd2savedatadat()
 
 	ret = archive_copyfile(SDArchive, HomeMenu_Extdata, filepath, "/SaveData.dat", filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
 
-	if(ret==0)printf("Successfully finished.\n");
+	if(ret==0)
+	{
+		printf("Successfully finished.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
 
-	gfxFlushBuffers();
-	gfxSwapBuffers();
-	svcSleepThread(5000000000LL);
 	return 0;
 }
 
@@ -134,6 +138,7 @@ int menu_enablethemecache()
 		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
 		gfxFlushBuffers();
 		gfxSwapBuffers();
+		return 0;
 	}
 
 	if(ret==0)
@@ -144,6 +149,7 @@ int menu_enablethemecache()
 			printf("SaveData.dat is already set for using the theme cache.\n");
 			gfxFlushBuffers();
 			gfxSwapBuffers();
+			return 0;
 		}
 	}
 
@@ -166,18 +172,81 @@ int menu_enablethemecache()
 		}
 	}
 
-	gfxFlushBuffers();
-	gfxSwapBuffers();
-	svcSleepThread(5000000000LL);
 	return 0;
 }
 
 int menu_themecache2sd()
 {
-	printf("themecache2sd N/A\n");
-	gfxFlushBuffers();
-	gfxSwapBuffers();
-	svcSleepThread(2000000000LL);
+	Result ret=0;
+	u32 thememanage[0x20>>2];
+	char filepath[256];
+
+	memset(thememanage, 0, 0x20);
+
+	memset(filepath, 0, 256);
+	snprintf(filepath, 255, "%sThemeManage.bin", sdpath_prefix);
+
+	ret = archive_copyfile(Theme_Extdata, SDArchive, "/ThemeManage.bin", filepath, filebuffer, 0x800, filebuffer_maxsize, "ThemeManage.bin");
+
+	if(ret==0)
+	{
+		printf("Successfully finished copying ThemeManage.bin.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
+	else
+	{
+		return 0;
+	}
+
+	memcpy(thememanage, filebuffer, 0x20);
+
+	if(thememanage[0x8>>2] == 0)
+	{
+		printf("Skipping copying of BodyCache.bin since the size field is zero.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
+	else
+	{
+		memset(filepath, 0, 256);
+		snprintf(filepath, 255, "%sBodyCache.bin", sdpath_prefix);
+
+		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BodyCache.bin", filepath, filebuffer, thememanage[0x8>>2], filebuffer_maxsize, "BodyCache.bin");
+
+		if(ret==0)
+		{
+			printf("Successfully finished copying BodyCache.bin.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
+	if(thememanage[0xC>>2] == 0)
+	{
+		printf("Skipping copying of BgmCache.bin since the size field is zero.\n");
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+	}
+	else
+	{
+		memset(filepath, 0, 256);
+		snprintf(filepath, 255, "%sBgmCache.bin", sdpath_prefix);
+
+		ret = archive_copyfile(Theme_Extdata, SDArchive, "/BgmCache.bin", filepath, filebuffer, thememanage[0xC>>2], filebuffer_maxsize, "BgmCache.bin");
+
+		if(ret==0)
+		{
+			printf("Successfully finished copying BgmCache.bin.\n");
+			gfxFlushBuffers();
+			gfxSwapBuffers();
+		}
+	}
+
 	return 0;
 }
 
@@ -186,7 +255,6 @@ int menu_sd2themecache()
 	printf("sd2themecache N/A\n");
 	gfxFlushBuffers();
 	gfxSwapBuffers();
-	svcSleepThread(2000000000LL);
 	return 0;
 }
 
@@ -208,6 +276,8 @@ int handle_menus()
 
 		ret = mainmenu_entryhandlers[ret]();
 		if(ret==-2)return ret;
+
+		svcSleepThread(5000000000LL);
 	}
 
 	return -2;
