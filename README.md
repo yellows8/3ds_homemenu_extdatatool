@@ -2,7 +2,7 @@ This is a Nintendo 3DS homebrew tool for accessing the Home Menu SD extdata, thi
 
 See also: http://3dbrew.org/wiki/Home_Menu http://3dbrew.org/wiki/Home_Menu/Themes
 
-This essentially allows the user to write custom themes to SD extdata which home-menu will automatically load at next startup.  See critical issue regarding this here: #1
+This essentially allows the user to write custom themes to SD extdata which home-menu will automatically load at next startup. See critical issue regarding this here: [#1](../../issues/1)
 
 # Compiling
 This requires the latest ctrulib from git.
