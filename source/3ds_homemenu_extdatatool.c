@@ -88,7 +88,7 @@ int menu_savedatadat2sd()
 	memset(filepath, 0, 256);
 	strncpy(filepath, "SaveData.dat", 255);
 
-	ret = archive_copyfile(HomeMenu_Extdata, SDArchive, "/SaveData.dat", filepath, filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
+	ret = archive_copyfile(HomeMenu_Extdata, SDArchive, "/SaveData.dat", filepath, filebuffer, 0, filebuffer_maxsize, "SaveData.dat");
 
 	if(ret==0)
 	{
@@ -110,7 +110,7 @@ int menu_sd2savedatadat()
 	memset(filepath, 0, 256);
 	strncpy(filepath, "SaveData.dat", 255);
 
-	ret = archive_copyfile(SDArchive, HomeMenu_Extdata, filepath, "/SaveData.dat", filebuffer, 0x2cb0, filebuffer_maxsize, "SaveData.dat");
+	ret = archive_copyfile(SDArchive, HomeMenu_Extdata, filepath, "/SaveData.dat", filebuffer, 0, filebuffer_maxsize, "SaveData.dat");
 
 	if(ret==0)
 	{
@@ -130,7 +130,7 @@ int menu_enablethemecache()
 	gfxFlushBuffers();
 	gfxSwapBuffers();
 
-	ret = archive_readfile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2cb0);
+	ret = archive_readfile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2da0);
 	if(ret!=0)
 	{
 		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
@@ -141,10 +141,10 @@ int menu_enablethemecache()
 
 	if(ret==0)
 	{
-		if(filebuffer[0x131b]==0 && filebuffer[0x13b8]!=0 && filebuffer[0x13bc]==0 && filebuffer[0x13bd]==2)
+		if(filebuffer[0x141b]==0 && filebuffer[0x13b8]!=0 && filebuffer[0x13bc]==0 && filebuffer[0x13bd]==2)
 		{
 			ret = -3;
-			printf("SaveData.dat is already set for using the theme cache.\n");
+			printf("SaveData.dat is already set for using the theme cache with a regular theme.\n");
 			gfxFlushBuffers();
 			gfxSwapBuffers();
 			return 0;
@@ -153,16 +153,16 @@ int menu_enablethemecache()
 
 	if(ret==0)
 	{
-		filebuffer[0x131b]=0;
-		filebuffer[0x13bd]=2;
-		memset(&filebuffer[0x13b8], 0, 5);
-		filebuffer[0x13b8] = 0xff;
+		filebuffer[0x141b]=0;//Disable theme shuffle.
+		memset(&filebuffer[0x13b8], 0, 8);//Clear the regular-theme structure.
+		filebuffer[0x13bd]=2;//theme-type
+		filebuffer[0x13b8] = 0xff;//theme-index
 
 		printf("Writing updated SaveData.dat...\n");
 		gfxFlushBuffers();
 		gfxSwapBuffers();
 
-		ret = archive_writefile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2cb0);
+		ret = archive_writefile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2da0);
 		if(ret!=0)
 		{
 			printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
