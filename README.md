@@ -7,7 +7,7 @@ This essentially allows the user to write custom themes to SD extdata which home
 # Compiling
 This requires the latest ctrulib from git.
 
-If you build a CXI/CIA for this, the accessinfo must have bitmask 0x01 set(in the RSF that's "FileSystemAccess" with field "- CategoryFileSystemTool").
+If you build a CXI/CIA for this, the accessinfo must have bitmask 0x01 set(in the RSF that's "FileSystemAccess" with field "- CategorySystemApplication").
 
 # Usage
 If you want to backup extdata before modifying it at all, you can copy the data from "sdmc:/Nintendo 3DS/{ID0}/{ID1}/extdata/00000000/{extdataIDlow}/" to elsewhere, where extdataIDlow is the extdataIDs for home-menu extdata and theme extdata: http://3dbrew.org/wiki/Extdata
