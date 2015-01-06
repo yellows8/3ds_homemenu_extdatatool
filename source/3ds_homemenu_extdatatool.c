@@ -10,18 +10,21 @@ typedef int (*menuent_funcptr)(void);
 
 int menu_savedatadat2sd();
 int menu_sd2savedatadat();
-int menu_enablethemecache();
+int enablethemecache();
+int menu_enablethemecache_normal();
+int menu_enablethemecache_persistent();
 int menu_themecache2sd();
 int menu_sd2themecache();
 
-int mainmenu_totalentries = 5;
-char *mainmenu_entries[5] = {
+int mainmenu_totalentries = 6;
+char *mainmenu_entries[6] = {
 "Copy extdata SaveData.dat to sd",
 "Copy SaveData.dat from sd to extdata",
-"Enable theme-cache",
-"Copy theme cache from extdata to sd",
-"Copy theme cache from sd to extdata"};
-menuent_funcptr mainmenu_entryhandlers[5] = {menu_savedatadat2sd, menu_sd2savedatadat, menu_enablethemecache, menu_themecache2sd, menu_sd2themecache};
+"Enable normal theme-cache",
+"Enable persistent theme-cache",
+"Copy theme-data from extdata to sd",
+"Copy theme-data from sd to extdata"};
+menuent_funcptr mainmenu_entryhandlers[6] = {menu_savedatadat2sd, menu_sd2savedatadat, menu_enablethemecache_normal, menu_enablethemecache_persistent, menu_themecache2sd, menu_sd2themecache};
 
 u8 *filebuffer;
 u32 filebuffer_maxsize = 0x400000;
@@ -122,15 +125,33 @@ int menu_sd2savedatadat()
 	return 0;
 }
 
-int menu_enablethemecache()
+int enablethemecache(u32 type)
 {	
 	Result ret=0;
+	u32 filesize = 0;
 
 	printf("Reading SaveData.dat...\n");
 	gfxFlushBuffers();
 	gfxSwapBuffers();
 
-	ret = archive_readfile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2da0);
+	ret = archive_getfilesize(HomeMenu_Extdata, "/SaveData.dat", &filesize);
+	if(ret!=0)
+	{
+		printf("Failed to get filesize for extdata SaveData.dat: 0x%08x\n", (unsigned int)ret);
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		return 0;
+	}
+
+	if(filesize > filebuffer_maxsize)
+	{
+		printf("Extdata SaveData.dat filesize is too large: 0x%08x\n", (unsigned int)filesize);
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		return 0;
+	}
+
+	ret = archive_readfile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, filesize);
 	if(ret!=0)
 	{
 		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
@@ -141,7 +162,7 @@ int menu_enablethemecache()
 
 	if(ret==0)
 	{
-		if(filebuffer[0x141b]==0 && filebuffer[0x13b8]!=0 && filebuffer[0x13bc]==0 && filebuffer[0x13bd]==2)
+		if(filebuffer[0x141b]==0 && filebuffer[0x13b8]!=0 && filebuffer[0x13bc]==0 && filebuffer[0x13bd]==type)
 		{
 			ret = -3;
 			printf("SaveData.dat is already set for using the theme cache with a regular theme.\n");
@@ -155,14 +176,14 @@ int menu_enablethemecache()
 	{
 		filebuffer[0x141b]=0;//Disable theme shuffle.
 		memset(&filebuffer[0x13b8], 0, 8);//Clear the regular-theme structure.
-		filebuffer[0x13bd]=2;//theme-type
+		filebuffer[0x13bd]=type;//theme-type
 		filebuffer[0x13b8] = 0xff;//theme-index
 
 		printf("Writing updated SaveData.dat...\n");
 		gfxFlushBuffers();
 		gfxSwapBuffers();
 
-		ret = archive_writefile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, 0x2da0);
+		ret = archive_writefile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, filesize);
 		if(ret!=0)
 		{
 			printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
@@ -172,6 +193,16 @@ int menu_enablethemecache()
 	}
 
 	return 0;
+}
+
+int menu_enablethemecache_normal()
+{
+	return enablethemecache(2);
+}
+
+int menu_enablethemecache_persistent()
+{
+	return enablethemecache(3);
 }
 
 int menu_themecache2sd()
