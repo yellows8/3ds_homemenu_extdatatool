@@ -71,9 +71,6 @@ int draw_menu(char **menu_entries, int total_menuentries, int x, int y)
 				if(cursor!=i)printf("\x1b[%d;%dH   %s", y+i, x, menu_entries[i]);
 				if(cursor==i)printf("\x1b[%d;%dH-> %s", y+i, x, menu_entries[i]);
 			}
-
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 	}
 
@@ -96,8 +93,6 @@ int menu_savedatadat2sd()
 	if(ret==0)
 	{
 		printf("Successfully finished.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 	}
 
 	return 0;
@@ -118,8 +113,6 @@ int menu_sd2savedatadat()
 	if(ret==0)
 	{
 		printf("Successfully finished.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 	}
 
 	return 0;
@@ -131,23 +124,17 @@ int enablethemecache(u32 type)
 	u32 filesize = 0;
 
 	printf("Reading SaveData.dat...\n");
-	gfxFlushBuffers();
-	gfxSwapBuffers();
 
 	ret = archive_getfilesize(HomeMenu_Extdata, "/SaveData.dat", &filesize);
 	if(ret!=0)
 	{
 		printf("Failed to get filesize for extdata SaveData.dat: 0x%08x\n", (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return 0;
 	}
 
 	if(filesize > filebuffer_maxsize)
 	{
 		printf("Extdata SaveData.dat filesize is too large: 0x%08x\n", (unsigned int)filesize);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return 0;
 	}
 
@@ -155,8 +142,6 @@ int enablethemecache(u32 type)
 	if(ret!=0)
 	{
 		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return 0;
 	}
 
@@ -166,8 +151,6 @@ int enablethemecache(u32 type)
 		{
 			ret = -3;
 			printf("SaveData.dat is already set for using the theme cache with a regular theme.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 			return 0;
 		}
 	}
@@ -180,15 +163,11 @@ int enablethemecache(u32 type)
 		filebuffer[0x13b8] = 0xff;//theme-index
 
 		printf("Writing updated SaveData.dat...\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 
 		ret = archive_writefile(HomeMenu_Extdata, "/SaveData.dat", filebuffer, filesize);
 		if(ret!=0)
 		{
 			printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 	}
 
@@ -221,8 +200,6 @@ int menu_themecache2sd()
 	if(ret==0)
 	{
 		printf("Successfully finished copying ThemeManage.bin.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 	}
 	else
 	{
@@ -234,8 +211,6 @@ int menu_themecache2sd()
 	if(thememanage[0x8>>2] == 0)
 	{
 		printf("Skipping copying of BodyCache.bin since the size field is zero.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 	}
 	else
 	{
@@ -247,8 +222,6 @@ int menu_themecache2sd()
 		if(ret==0)
 		{
 			printf("Successfully finished copying BodyCache.bin.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 		else
 		{
@@ -259,8 +232,6 @@ int menu_themecache2sd()
 	if(thememanage[0xC>>2] == 0)
 	{
 		printf("Skipping copying of BgmCache.bin since the size field is zero.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 	}
 	else
 	{
@@ -272,8 +243,6 @@ int menu_themecache2sd()
 		if(ret==0)
 		{
 			printf("Successfully finished copying BgmCache.bin.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 	}
 
@@ -304,23 +273,17 @@ int menu_sd2themecache()
 		if(ret!=0)
 		{
 			printf("Failed to stat BodyCache.bin and body_LZ.bin on SD, copying for the body-data will be skipped.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 
 			memset(body_filepath, 0, 256);
 		}
 		else
 		{
 			printf("Using body-filepath body_LZ.bin.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 	}
 	else
 	{
 		printf("Using body-filepath BodyCache.bin.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 	}
 
 	memset(bgm_filepath, 0, 256);
@@ -336,23 +299,17 @@ int menu_sd2themecache()
 		if(ret!=0)
 		{
 			printf("Failed to stat BgmCache.bin and bgm.bcstm on SD, copying for the bgm-data will be skipped.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 
 			memset(bgm_filepath, 0, 256);
 		}
 		else
 		{
 			printf("Using bgm-filepath bgm.bcstm.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 	}
 	else
 	{
 		printf("Using bgm-filepath BgmCache.bin.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 	}
 
 	memset(filepath, 0, 256);
@@ -363,16 +320,12 @@ int menu_sd2themecache()
 	if(ret==0)
 	{
 		printf("Successfully finished copying ThemeManage.bin.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 
 		memcpy(thememanage, filebuffer, 0x20);
 	}
 	else
 	{
 		printf("Failed to copy ThemeManage.bin, generating one then trying again...\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 
 		memset(thememanage, 0, 0x20);
 		thememanage[0x0>>2] = 1;
@@ -390,8 +343,6 @@ int menu_sd2themecache()
 		if(ret!=0)
 		{
 			printf("Failed to write ThemeManage.bin to extdata, aborting.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 			return 0;
 		}
 	}
@@ -401,8 +352,6 @@ int menu_sd2themecache()
 		if(thememanage[0x8>>2] == 0)
 		{
 			printf("Skipping copying of body-data since the size field is zero.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 		else
 		{
@@ -411,8 +360,6 @@ int menu_sd2themecache()
 			if(ret==0)
 			{
 				printf("Successfully finished copying body-data.\n");
-				gfxFlushBuffers();
-				gfxSwapBuffers();
 			}
 			else
 			{
@@ -426,8 +373,6 @@ int menu_sd2themecache()
 		if(thememanage[0xC>>2] == 0)
 		{
 			printf("Skipping copying of bgm-data since the size field is zero.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 		else
 		{
@@ -436,8 +381,6 @@ int menu_sd2themecache()
 			if(ret==0)
 			{
 				printf("Successfully finished copying bgm-data.\n");
-				gfxFlushBuffers();
-				gfxSwapBuffers();
 			}
 		}
 	}
@@ -448,9 +391,6 @@ int menu_sd2themecache()
 int handle_menus()
 {
 	int ret;
-
-	gfxFlushBuffers();
-	gfxSwapBuffers();
 
 	while(aptMainLoop())
 	{
@@ -464,7 +404,15 @@ int handle_menus()
 		ret = mainmenu_entryhandlers[ret]();
 		if(ret==-2)return ret;
 
-		svcSleepThread(5000000000LL);
+		printf("\nPress A to return to the main-menu.\n");
+
+		while(1)
+		{
+			gspWaitForVBlank();
+			hidScanInput();
+
+			if(hidKeysDown() & KEY_A)break;
+		}
 	}
 
 	return -2;
@@ -475,20 +423,16 @@ int main()
 	Result ret = 0;
 
 	// Initialize services
-	gfxInit();
+	gfxInitDefault();
 
 	consoleInit(GFX_BOTTOM, NULL);
 
 	printf("3ds_homemenu_extdatatool\n");
-	gfxFlushBuffers();
-	gfxSwapBuffers();
 
 	filebuffer = (u8*)malloc(0x400000);
 	if(filebuffer==NULL)
 	{
 		printf("Failed to allocate memory.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		ret = -1;
 	}
 	else
@@ -499,14 +443,11 @@ int main()
 	if(ret>=0)
 	{
 		printf("Opening extdata archives...\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
+
 		ret = open_extdata();
 		if(ret==0)
 		{
 			printf("Finished opening extdata.\n");
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 
 			consoleClear();
 			handle_menus();
@@ -525,10 +466,6 @@ int main()
 			u32 kDown = hidKeysDown();
 			if (kDown & KEY_START)
 				break; // break in order to return to hbmenu
-
-			// Flush and swap framebuffers
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 	}
 

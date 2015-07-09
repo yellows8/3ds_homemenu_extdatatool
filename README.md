@@ -14,7 +14,7 @@ Backing up extdata before modifying it at all is recommended: you can copy the d
 
 If you want to disable using the theme-cache, you can either enter home-menu theme-settings then select none, restore a backup of SaveData.dat with this tool, restore the entire home-menu and/or theme  extdata with the above backup, or delete the homemenu and/or theme extdata.
 
-Once the main-menu loads(after opening the extdata archives), use the D-Pad/Circle-Pad to select a menu entry. Press A to enter a menu, once finished it will delay 5 seconds before automatically returning from the menu. When at the main-menu, press B to return to the hbmenu.
+Once the main-menu loads(after opening the extdata archives), use the D-Pad/Circle-Pad to select a menu entry. Press A to enter a menu. When at the main-menu, press B to return to the hbmenu.
 
 Main menu:
 * "Copy extdata SaveData.dat to sd" This can be used to backup your SaveData.dat to SD(this contains the current theme settings and other things).

@@ -21,8 +21,6 @@ Result open_extdata()
 	if(ret!=0)
 	{
 		printf("initCfgu() failed: 0x%08x\n", (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return ret;
 	}
 
@@ -30,8 +28,6 @@ Result open_extdata()
 	if(ret!=0)
 	{
 		printf("CFGU_SecureInfoGetRegion() failed: 0x%08x\n", (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return ret;
 	}
 
@@ -71,8 +67,6 @@ Result open_extdata()
 	if(ret!=0)
 	{
 		printf("Failed to open homemenu extdata with extdataID=0x%08x, retval: 0x%08x\n", (unsigned int)extdataID_homemenu, (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return ret;
 	}
 	extdata_initialized |= 0x1;
@@ -81,8 +75,6 @@ Result open_extdata()
 	if(ret!=0)
 	{
 		printf("Failed to open theme extdata with extdataID=0x%08x, retval: 0x%08x\n", (unsigned int)extdataID_theme, (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return ret;
 	}
 	extdata_initialized |= 0x2;
@@ -215,8 +207,6 @@ Result archive_copyfile(Archive inarchive, Archive outarchive, char *inpath, cha
 
 	ret = archive_getfilesize(inarchive, inpath, &filesize);
 	printf("archive_getfilesize() ret=0x%08x, size=0x%08x\n", (unsigned int)ret, (unsigned int)filesize);
-	gfxFlushBuffers();
-	gfxSwapBuffers();
 	if(ret!=0)return ret;
 
 	if(size==0 || size>filesize)
@@ -227,35 +217,25 @@ Result archive_copyfile(Archive inarchive, Archive outarchive, char *inpath, cha
 	if(size>maxbufsize)
 	{
 		printf("Size is too large.\n");
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		ret = -1;
 		return ret;
 	}
 
 	printf("Reading %s...\n", display_filepath);
-	gfxFlushBuffers();
-	gfxSwapBuffers();
 
 	ret = archive_readfile(inarchive, inpath, buffer, size);
 	if(ret!=0)
 	{
 		printf("Failed to read file: 0x%08x\n", (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return ret;
 	}
 
 	printf("Writing %s...\n", display_filepath);
-	gfxFlushBuffers();
-	gfxSwapBuffers();
 
 	ret = archive_writefile(outarchive, outpath, buffer, size);
 	if(ret!=0)
 	{
 		printf("Failed to write file: 0x%08x\n", (unsigned int)ret);
-		gfxFlushBuffers();
-		gfxSwapBuffers();
 		return ret;
 	}
 
