@@ -32,7 +32,7 @@ SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
 
-APP_TITLE	:=	3ds_homemenu_extdatatool
+APP_TITLE	:=	3ds_homemenu_extdatatool v1.1.1
 APP_DESCRIPTION	:=	Tool for accessing Home Menu extdata, including themes.
 APP_AUTHOR	:=	yellows8
 
