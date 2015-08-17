@@ -28,5 +28,5 @@ The data this app reads/writes to/from sdmc is located in the same directory tha
 The theme-data this app uses on sdmc is the following:
 * "ThemeManage.bin" This is copied from extdata to sdmc. This can be copied to extdata from sdmc, if it doesn't exist on sdmc for that then data is generated for it then writen to extdata.
 * "BodyCache.bin" and "body_LZ.bin": The former is copied from extdata to sdmc. When copying from sdmc to extdata, the app will first attempt to use "BodyCache.bin", then "body_LZ.bin". When ThemeManage.bin exists on sdmc with sdmc->extdata, this body-data is only copied when the size field in ThemeManage.bin for this is non-zero. When copying to extdata, the filesize must be smaller than or exactly 0x150000-bytes.
-* "BgmCache.bin" and "bgm.bcstm": Handled basically the same way as the body-data, except with the bgm sizes. When copying to extdata, the filesize must be smaller than or exactly 0x337000-bytes.
+* "BgmCache.bin" and "bgm.bcstm": Handled basically the same way as the body-data, except with the bgm sizes. When copying to extdata, the filesize must be smaller than or exactly 0x337000-bytes. When writing BGM to extdata, Home Menu *must* *not* be already using any BGM from the theme-cache(prior to when this tool wrote anything to extdata), otherwise this issue occurs: [#2](../../issues/2).
 
